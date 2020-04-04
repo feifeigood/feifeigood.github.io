@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="feifeigood">
+  
+  
+  
+  <link rel="prev" href="https://feifeigood.github.io/2020/coredns-forwarding-loops/" />
+  <link rel="next" href="https://feifeigood.github.io/2020/metallb-kube-proxy-ipvs-model/" />
+  <link rel="canonical" href="https://feifeigood.github.io/2020/kube-proxy-hostname-override/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           kube-proxy配置externalTrafficPolicy:Local失效排查 | feifeigood&#39;s Blog
+       
+  </title>
+  <meta name="title" content="kube-proxy配置externalTrafficPolicy:Local失效排查 | feifeigood&#39;s Blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/feifeigood.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "kube-proxy配置externalTrafficPolicy:Local失效排查",
+    "headline" : "kube-proxy配置externalTrafficPolicy:Local失效排查",
+    "description" : "使用externalTrafficPolicy策略来保留源IP地址 由于业务需要在访问日志里记录真实的客户端地址，采用externalTraf",
+    "inLanguage" : "zh-cn",
+    "author" : "feifeigood",
+    "creator" : "feifeigood",
+    "publisher": "feifeigood",
+    "accountablePerson" : "feifeigood",
+    "copyrightHolder" : "feifeigood",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-03-03 10:54:14 \x2b0800 \x2b0800",
+    "dateModified" : "2020-03-03 10:54:14 \x2b0800 \x2b0800",
+    "url" : "https:\/\/feifeigood.github.io\/2020\/kube-proxy-hostname-override\/",
+    "wordCount" : "598",
+    "keywords" : [ "k8s","kube-proxy", "feifeigood\x27s Blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://feifeigood.github.io">feifeigood&#39;s Blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://feifeigood.github.io">feifeigood&#39;s Blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">kube-proxy配置externalTrafficPolicy:Local失效排查</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://feifeigood.github.io" rel="author">feifeigood</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-03-03 itemprop="datePublished">March 3, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://feifeigood.github.io/categories/kubernetes%E5%AE%9E%E8%B7%B5/"> kubernetes实践 </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h1 id="使用externaltrafficpolicy策略来保留源ip地址">使用externalTrafficPolicy策略来保留源IP地址</h1>
+<p>由于业务需要在访问日志里记录真实的客户端地址，采用externalTrafficPolicy的默认策略Cluster，虽然能够得到较好的负载均衡效果，但是由于多次SNAT导致源IP地址的丢失，这里采用kubernetes官方提供的方案，直接把策略改为Local
+具体原理可以看这个博客的分析，比较详细 <a href="https://blog.firemiles.top/2019/09/04/preserve-source-ip-in-k8s/">preserve-source-ip-in-k8s</a></p>
+<h2 id="开启local策略无法转发流量">开启Local策略，无法转发流量</h2>
+<p>业务集群采用的是kube-proxy的IPVS模式，在开启Local策略后，通过ipvsadm发现丢失了所有的RealServer如下图
+<img src="https://raw.githubusercontent.com/feifeigood/blog-images/master/img/20200303220601.png" alt="">
+但是还原回默认策略后就恢复正常，这就非常奇怪了，其他几个集群一样的配置就没有出现过这样的问题，查看kube-proxy日志均无异常，无从下手直接去看了kube-proxy添加ipvs规则的源码</p>
+<h2 id="开启local模式会影响ipvs的添加规则逻辑">开启Local模式会影响ipvs的添加规则逻辑</h2>
+<p><img src="https://raw.githubusercontent.com/feifeigood/blog-images/master/img/20200303224345.png" alt="">
+上图两个逻辑，目前没有配置TopologyKeys所以只可能是Endpoints的GetLocal方法给的值不对
+<img src="https://raw.githubusercontent.com/feifeigood/blog-images/master/img/20200303225203.png" alt="">
+<img src="https://raw.githubusercontent.com/feifeigood/blog-images/master/img/20200303225446.png" alt="">
+恰好集群也配置了hostname-override参数，最后检查这个参数的配置确实和主机名不符，修改正确后就可以使用该功能了</p>
+<h2 id="总结">总结</h2>
+<p>对于kubernetes这个庞大的系统，任何一个细小的配置都可能决定许多功能的逻辑走向，针对不明白的配置，没弄明白前最好不要直接跟随快餐教程直接配置使用，可能还不如官方默认给的值可靠。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>feifeigood </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://feifeigood.github.io/2020/kube-proxy-hostname-override/>https://feifeigood.github.io/2020/kube-proxy-hostname-override/</span>
+            </p>
+            
+             
+            <p class="copyright-item lincese">
+                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-tag"></i>Tag(s): 
+            
+            <span class="tag"><a href="https://feifeigood.github.io/tags/k8s/">
+                    #k8s</a></span>
+            
+            <span class="tag"><a href="https://feifeigood.github.io/tags/kube-proxy/">
+                    #kube-proxy</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://feifeigood.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://feifeigood.github.io/2020/coredns-forwarding-loops/" class="prev" rel="prev" title="kubernetes内解析回环导致coredns频繁OOMKilled"><i class="iconfont icon-left"></i>&nbsp;kubernetes内解析回环导致coredns频繁OOMKilled</a>
+         
+        
+        <a href="https://feifeigood.github.io/2020/metallb-kube-proxy-ipvs-model/" class="next" rel="next" title="kube-proxy的ipvs模式下使用metallb的arp异常现象">kube-proxy的ipvs模式下使用metallb的arp异常现象&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+
+    var gitalk = new Gitalk({
+        clientID: '28f695948e6230377ba4',
+        clientSecret: '263f20a97af4c1ca1ac9fe6f11b390e08bdb76d7',
+        repo: 'blog-commits',
+        owner: 'feifeigood',
+        admin: [''],
+        id: location.pathname,      
+        distractionFreeMode: false  
+    });
+
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://feifeigood.github.io">feifeigood</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

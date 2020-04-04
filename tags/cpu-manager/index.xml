@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>cpu-manager on feifeigood&#39;s Blog</title>
+    <link>https://feifeigood.github.io/tags/cpu-manager/</link>
+    <description>Recent content in cpu-manager on feifeigood&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 03 Apr 2020 10:54:14 +0800</lastBuildDate>
+    
+	<atom:link href="https://feifeigood.github.io/tags/cpu-manager/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>kubernetes启用cpuset来进行CPU独占分配</title>
+      <link>https://feifeigood.github.io/2020/cpuset-in-k8s/</link>
+      <pubDate>Fri, 03 Apr 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/cpuset-in-k8s/</guid>
+      <description>在kubernetes集群中大量Pod共享同一个主机的CPU和内存资源，默认情况下集群使用Linux内核的CFS调度策略来对CPU计算资源进</description>
+    </item>
+    
+  </channel>
+</rss>

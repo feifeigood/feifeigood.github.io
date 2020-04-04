@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>kube-proxy on feifeigood&#39;s Blog</title>
+    <link>https://feifeigood.github.io/tags/kube-proxy/</link>
+    <description>Recent content in kube-proxy on feifeigood&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Thu, 05 Mar 2020 10:54:14 +0800</lastBuildDate>
+    
+	<atom:link href="https://feifeigood.github.io/tags/kube-proxy/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>kube-proxy的ipvs模式下使用metallb的arp异常现象</title>
+      <link>https://feifeigood.github.io/2020/metallb-kube-proxy-ipvs-model/</link>
+      <pubDate>Thu, 05 Mar 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/metallb-kube-proxy-ipvs-model/</guid>
+      <description>kubernetes集群没有接入云厂商，要实现LoadBalancer需要使用插件metallb，在使用过程中发现一些细小的问题在这里记录一</description>
+    </item>
+    
+    <item>
+      <title>kube-proxy配置externalTrafficPolicy:Local失效排查</title>
+      <link>https://feifeigood.github.io/2020/kube-proxy-hostname-override/</link>
+      <pubDate>Tue, 03 Mar 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/kube-proxy-hostname-override/</guid>
+      <description>使用externalTrafficPolicy策略来保留源IP地址 由于业务需要在访问日志里记录真实的客户端地址，采用externalTraf</description>
+    </item>
+    
+  </channel>
+</rss>

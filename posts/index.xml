@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on feifeigood&#39;s Blog</title>
+    <link>https://feifeigood.github.io/posts/</link>
+    <description>Recent content in Posts on feifeigood&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 03 Apr 2020 10:54:14 +0800</lastBuildDate>
+    
+	<atom:link href="https://feifeigood.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>kubernetes启用cpuset来进行CPU独占分配</title>
+      <link>https://feifeigood.github.io/2020/cpuset-in-k8s/</link>
+      <pubDate>Fri, 03 Apr 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/cpuset-in-k8s/</guid>
+      <description>在kubernetes集群中大量Pod共享同一个主机的CPU和内存资源，默认情况下集群使用Linux内核的CFS调度策略来对CPU计算资源进</description>
+    </item>
+    
+    <item>
+      <title>kube-proxy的ipvs模式下使用metallb的arp异常现象</title>
+      <link>https://feifeigood.github.io/2020/metallb-kube-proxy-ipvs-model/</link>
+      <pubDate>Thu, 05 Mar 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/metallb-kube-proxy-ipvs-model/</guid>
+      <description>kubernetes集群没有接入云厂商，要实现LoadBalancer需要使用插件metallb，在使用过程中发现一些细小的问题在这里记录一</description>
+    </item>
+    
+    <item>
+      <title>kube-proxy配置externalTrafficPolicy:Local失效排查</title>
+      <link>https://feifeigood.github.io/2020/kube-proxy-hostname-override/</link>
+      <pubDate>Tue, 03 Mar 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/kube-proxy-hostname-override/</guid>
+      <description>使用externalTrafficPolicy策略来保留源IP地址 由于业务需要在访问日志里记录真实的客户端地址，采用externalTraf</description>
+    </item>
+    
+    <item>
+      <title>kubernetes内解析回环导致coredns频繁OOMKilled</title>
+      <link>https://feifeigood.github.io/2020/coredns-forwarding-loops/</link>
+      <pubDate>Thu, 27 Feb 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/coredns-forwarding-loops/</guid>
+      <description>在调整上线业务集群的时候发现发现容器内的coredns总是会OOMKilled不论内存限制开放多大都会直接占满如下图 查看监控曲线可以看出co</description>
+    </item>
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(4)部署node节点</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-node/</link>
+      <pubDate>Thu, 20 Feb 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-node/</guid>
+      <description>k8s集群node节点由以下几个服务组成 docker =&amp;gt; 容器运行时 kubelet =&amp;gt; node节点核心组件，pod管家负责执行master的pod任务并与docker通</description>
+    </item>
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(3)部署master节点</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-master/</link>
+      <pubDate>Sun, 09 Feb 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-master/</guid>
+      <description>k8s集群master节点由kube-apiserver、kube-controller-manager、kube-scheduler组成，</description>
+    </item>
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(2)部署高可用etcd集群</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-etcd/</link>
+      <pubDate>Thu, 30 Jan 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-etcd/</guid>
+      <description>本文介绍如何部署集群核心存储etcd的高可用集群，etcd是k8s唯一支持的kv存储系统，k8s的所有对象资源数据全部都存储在etcd上，e</description>
+    </item>
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(1)安装准备</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-prepare/</link>
+      <pubDate>Thu, 23 Jan 2020 10:32:25 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-prepare/</guid>
+      <description>最近kubernetes越来越火，领导让调研下怎么在公司使用起来，为了更好的了解kubernetes的组成，我选择了手工搭建的方式来构建集群</description>
+    </item>
+    
+    <item>
+      <title>使用rook在kubernetes集群上部署ceph集群</title>
+      <link>https://feifeigood.github.io/2020/rook-ceph-in-k8s/</link>
+      <pubDate>Thu, 16 Jan 2020 22:55:25 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/rook-ceph-in-k8s/</guid>
+      <description>rook是基于kubernetes的一个开源的云原生存储部署项目，它也是CNCF的首个云原生存储项目，提供了在kubernetes集群上部署</description>
+    </item>
+    
+  </channel>
+</rss>

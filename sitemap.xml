@@ -1,0 +1,244 @@
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+    <url>
+      <loc>https://feifeigood.github.io/categories/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/cpu-manager/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/k8s/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/cpuset-in-k8s/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/categories/kubernetes%E5%AE%9E%E8%B7%B5/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/posts/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/</loc>
+      
+      <lastmod>2020-04-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/kube-proxy/</loc>
+      
+      <lastmod>2020-03-05T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/metallb-kube-proxy-ipvs-model/</loc>
+      
+      <lastmod>2020-03-05T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/categories/metallb/</loc>
+      
+      <lastmod>2020-03-05T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/metallb/</loc>
+      
+      <lastmod>2020-03-05T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/kube-proxy-hostname-override/</loc>
+      
+      <lastmod>2020-03-03T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/coredns/</loc>
+      
+      <lastmod>2020-02-27T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/coredns-forwarding-loops/</loc>
+      
+      <lastmod>2020-02-27T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/deploy-k8s-node/</loc>
+      
+      <lastmod>2020-02-20T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/%E9%83%A8%E7%BD%B2k8s/</loc>
+      
+      <lastmod>2020-02-20T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/deploy-k8s-master/</loc>
+      
+      <lastmod>2020-02-09T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/deploy-k8s-etcd/</loc>
+      
+      <lastmod>2020-01-30T10:54:14+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/deploy-k8s-prepare/</loc>
+      
+      <lastmod>2020-01-23T10:32:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/ceph/</loc>
+      
+      <lastmod>2020-01-16T22:55:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/tags/rook/</loc>
+      
+      <lastmod>2020-01-16T22:55:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/2020/rook-ceph-in-k8s/</loc>
+      
+      <lastmod>2020-01-16T22:55:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://feifeigood.github.io/about/</loc>
+      
+      <lastmod>2020-01-16T21:32:20+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+</urlset>

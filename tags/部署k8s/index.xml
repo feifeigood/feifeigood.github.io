@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>部署k8s on feifeigood&#39;s Blog</title>
+    <link>https://feifeigood.github.io/tags/%E9%83%A8%E7%BD%B2k8s/</link>
+    <description>Recent content in 部署k8s on feifeigood&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Thu, 20 Feb 2020 10:54:14 +0800</lastBuildDate>
+    
+	<atom:link href="https://feifeigood.github.io/tags/%E9%83%A8%E7%BD%B2k8s/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(4)部署node节点</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-node/</link>
+      <pubDate>Thu, 20 Feb 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-node/</guid>
+      <description>k8s集群node节点由以下几个服务组成 docker =&amp;gt; 容器运行时 kubelet =&amp;gt; node节点核心组件，pod管家负责执行master的pod任务并与docker通</description>
+    </item>
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(3)部署master节点</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-master/</link>
+      <pubDate>Sun, 09 Feb 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-master/</guid>
+      <description>k8s集群master节点由kube-apiserver、kube-controller-manager、kube-scheduler组成，</description>
+    </item>
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(2)部署高可用etcd集群</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-etcd/</link>
+      <pubDate>Thu, 30 Jan 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-etcd/</guid>
+      <description>本文介绍如何部署集群核心存储etcd的高可用集群，etcd是k8s唯一支持的kv存储系统，k8s的所有对象资源数据全部都存储在etcd上，e</description>
+    </item>
+    
+    <item>
+      <title>手动搭建kubernetes集群系列-(1)安装准备</title>
+      <link>https://feifeigood.github.io/2020/deploy-k8s-prepare/</link>
+      <pubDate>Thu, 23 Jan 2020 10:32:25 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/deploy-k8s-prepare/</guid>
+      <description>最近kubernetes越来越火，领导让调研下怎么在公司使用起来，为了更好的了解kubernetes的组成，我选择了手工搭建的方式来构建集群</description>
+    </item>
+    
+  </channel>
+</rss>

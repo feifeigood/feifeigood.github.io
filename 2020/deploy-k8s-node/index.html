@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="feifeigood">
+  
+  
+  
+  <link rel="prev" href="https://feifeigood.github.io/2020/deploy-k8s-master/" />
+  <link rel="next" href="https://feifeigood.github.io/2020/coredns-forwarding-loops/" />
+  <link rel="canonical" href="https://feifeigood.github.io/2020/deploy-k8s-node/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           手动搭建kubernetes集群系列-(4)部署node节点 | feifeigood&#39;s Blog
+       
+  </title>
+  <meta name="title" content="手动搭建kubernetes集群系列-(4)部署node节点 | feifeigood&#39;s Blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/feifeigood.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "手动搭建kubernetes集群系列-(4)部署node节点",
+    "headline" : "手动搭建kubernetes集群系列-(4)部署node节点",
+    "description" : "k8s集群node节点由以下几个服务组成 docker =\x26gt; 容器运行时 kubelet =\x26gt; node节点核心组件，pod管家负责执行master的pod任务并与docker通",
+    "inLanguage" : "zh-cn",
+    "author" : "feifeigood",
+    "creator" : "feifeigood",
+    "publisher": "feifeigood",
+    "accountablePerson" : "feifeigood",
+    "copyrightHolder" : "feifeigood",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-02-20 10:54:14 \x2b0800 \x2b0800",
+    "dateModified" : "2020-02-20 10:54:14 \x2b0800 \x2b0800",
+    "url" : "https:\/\/feifeigood.github.io\/2020\/deploy-k8s-node\/",
+    "wordCount" : "2322",
+    "keywords" : [ "k8s","部署k8s", "feifeigood\x27s Blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://feifeigood.github.io">feifeigood&#39;s Blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://feifeigood.github.io">feifeigood&#39;s Blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">手动搭建kubernetes集群系列-(4)部署node节点</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://feifeigood.github.io" rel="author">feifeigood</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-02-20 itemprop="datePublished">February 20, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://feifeigood.github.io/categories/kubernetes%E5%AE%9E%E8%B7%B5/"> kubernetes实践 </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>k8s集群node节点由以下几个服务组成</p>
+<ul>
+<li>docker =&gt; 容器运行时</li>
+<li>kubelet =&gt; node节点核心组件，pod管家负责执行master的pod任务并与docker通信</li>
+<li>kube-proxy =&gt; 提供kubernetes的service概念，提供负载均衡，主要作用是代理流量UDP/TCP，不支持HTTP</li>
+<li>flannel =&gt; 集群使用的网络插件，会采用cni的方式通过容器来安装</li>
+</ul>
+<h2 id="使用cfssl创建证书">使用cfssl创建证书</h2>
+<pre><code class="language-code" data-lang="code"># 创建kube-proxy使用的请求证书 kube-proxy-csr.json
+# CN指定证书使用的用户时system:kube-proxy，是kube-apiserver预定义的与kube-proxy有关的api接口权限用户
+{
+  &quot;CN&quot;: &quot;system:kube-proxy&quot;,
+  &quot;hosts&quot;: [],
+  &quot;key&quot;: {
+    &quot;algo&quot;: &quot;rsa&quot;,
+    &quot;size&quot;: 2048
+  },
+  &quot;names&quot;: [
+    {
+      &quot;C&quot;: &quot;CN&quot;,
+      &quot;ST&quot;: &quot;JiangSu&quot;,
+      &quot;L&quot;: &quot;NanTong&quot;,
+      &quot;O&quot;: &quot;k8s&quot;,
+      &quot;OU&quot;: &quot;System&quot;
+    }
+  ]
+}
+# 生成证书
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes  kube-proxy-csr.json | cfssljson -bare kube-proxy
+
+# 创建kubelet使用的请求证书 kubelet-csr.json
+# CN必须为system:node:{hostname} 因为在k8s 1.8版本以上node归为了 system:nodes组 详见 https://github.com/kubernetes/kops/issues/3551#issuecomment-334955958
+# 注意这个证书每个节点都要生成一遍，不能重复利用
+{
+  &quot;CN&quot;: &quot;system:node:192.168.0.1&quot;,
+  &quot;hosts&quot;: [
+    &quot;127.0.0.1&quot;,
+    &quot;192.168.0.1&quot;
+  ],
+  &quot;key&quot;: {
+    &quot;algo&quot;: &quot;rsa&quot;,
+    &quot;size&quot;: 2048
+  },
+  &quot;names&quot;: [
+    {
+      &quot;C&quot;: &quot;CN&quot;,
+      &quot;ST&quot;: &quot;JiangSu&quot;,
+      &quot;L&quot;: &quot;NanTong&quot;,
+      &quot;O&quot;: &quot;system:nodes&quot;,
+      &quot;OU&quot;: &quot;System&quot;
+    }
+  ]
+}
+# 生成证书
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kubelet-csr.json | cfssljson -bare kubelet
+</code></pre><p>创建完证书后将生成的*.pem文件全部复制到<code>/etc/kubernetes/ssl</code>目录下，后续启动服务需要配置这些证书</p>
+<h2 id="创建kubeconfig配置文件">创建kubeconfig配置文件</h2>
+<p>创建kubelet和kube-proxy需要的kubeconfig配置文件，每个节点都要创建</p>
+<pre><code class="language-code" data-lang="code"># 设置集群参数 k8s-example-01 是集群的名称 https://192.168.0.1:6443 是集群master主机的地址api接口 根据具体集群动态来生成 写入kube-proxy.kubeconfig
+[root@DOCKER-192.168.0.1 ~]# kubectl config set-cluster k8s-example-01 --certificate-authority=/etc/kubernetes/ssl/ca.pem --embed-certs=true --server=https://192.168.0.1:6443 --kubeconfig=kube-proxy.kubeconfig
+Cluster &quot;k8s-example-01&quot; set.
+# 设置客户端认证参数
+[root@DOCKER-192.168.0.1 ~]# kubectl config set-credentials kube-proxy --client-certificate=/etc/kubernetes/ssl/kube-proxy.pem --embed-certs=true --client-key=/etc/kubernetes/ssl/kube-proxy-key.pem --kubeconfig=kube-proxy.kubeconfig
+User &quot;kube-proxy&quot; set.
+# 设置上下文参数
+[root@DOCKER-192.168.0.1 ~]# kubectl config set-context default --cluster=k8s-example-01 --user=kube-proxy --kubeconfig=kube-proxy.kubeconfig
+Context &quot;default&quot; created.
+# 设置默认上下文
+[root@DOCKER-192.168.0.1 ~]# kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
+Switched to context &quot;default&quot;.
+
+[root@192.168.0.1 ssl]# kubectl config set-cluster k8s-example-01 --certificate-authority=/etc/kubernetes/ssl/ca.pem --embed-certs=true --server=https://192.168.0.1:6443 --kubeconfig=/etc/kubernetes/kubelet.kubeconfig
+Cluster &quot;k8s-example-01&quot; set.
+# 这里配置要根据每个节点不同的CN来分别创建
+[root@192.168.0.1 ssl]# kubectl config set-credentials system:node:192.168.0.1 --client-certificate=/etc/kubernetes/ssl/kubelet.pem --embed-certs=true --client-key=/etc/kubernetes/ssl/kubelet-key.pem --kubeconfig=/etc/kubernetes/kubelet.kubeconfig
+User &quot;system:node&quot; set.
+[root@192.168.0.1 ssl]# kubectl config set-context default --cluster=k8s-example-01 --user=system:node:192.168.0.1 --kubeconfig=/etc/kubernetes/kubelet.kubeconfig
+Context &quot;default&quot; created.
+[root@192.168.0.1 ssl]# kubectl config use-context default --kubeconfig=/etc/kubernetes/kubelet.kubeconfig
+Switched to context &quot;default&quot;.
+</code></pre><h2 id="安装cni插件包">安装cni插件包</h2>
+<p>为了部署flannel需要先安装相关的插件包到节点设备</p>
+<pre><code class="language-code" data-lang="code"># 复制基础插件
+wget https://github.com/containernetworking/plugins/releases/download/v0.8.3/cni-plugins-linux-amd64-v0.8.3.tgz
+tar -xzvf cni-plugins-linux-amd64-v0.8.3.tgz 
+cp bridge host-local loopback flannel portmap /usr/local/bin/
+# 配置默认cni配置文件 /etc/cni/net.d/10-default.conf 在部署插件前让节点先加入集群变为ready状态
+{
+    &quot;name&quot;: &quot;mynet&quot;,
+   &quot;cniVersion&quot;: &quot;0.3.1&quot;,
+    &quot;type&quot;: &quot;bridge&quot;,
+    &quot;bridge&quot;: &quot;mynet0&quot;,
+    &quot;isDefaultGateway&quot;: true,
+    &quot;ipMasq&quot;: true,
+    &quot;hairpinMode&quot;: true,
+    &quot;ipam&quot;: {
+        &quot;type&quot;: &quot;host-local&quot;,
+        &quot;subnet&quot;: &quot;172.20.0.0/16&quot;
+    }
+}
+</code></pre><h2 id="安装node节点组件">安装node节点组件</h2>
+<pre><code class="language-code" data-lang="code"># v1.17版本官方推荐使用19.03.5版本docker
+wget https://download.docker.com/linux/static/stable/x86_64/docker-19.03.5.tgz
+tar -xzvf docker-19.03.5.tgz 
+cp docker/* /usr/bin/
+# 配置docker配置文件 /etc/docker/daemon.json 这里的data-root目录可以替换为单独的磁盘避免和系统争抢IO
+{
+    &quot;registry-mirrors&quot;: [
+        &quot;https://dockerhub.azk8s.cn&quot;,
+        &quot;https://docker.mirrors.ustc.edu.cn&quot;,
+        &quot;http://hub-mirror.c.163.com&quot;
+    ],
+    &quot;max-concurrent-downloads&quot;: 10,
+    &quot;log-driver&quot;: &quot;json-file&quot;,
+    &quot;log-level&quot;: &quot;warn&quot;,
+    &quot;log-opts&quot;: {
+        &quot;max-size&quot;: &quot;10m&quot;,
+        &quot;max-file&quot;: &quot;3&quot;
+    },
+    &quot;data-root&quot;: &quot;/var/lib/docker&quot;
+}
+</code></pre><p>创建docker systemd unit文件 /usr/lib/systemd/system/docker.service</p>
+<pre><code class="language-code" data-lang="code">cat &gt; /usr/lib/systemd/system/docker.service &lt;&lt;EOF
+[Unit]
+Description=Docker Application Container Engine
+Documentation=http://docs.docker.io
+
+[Service]
+Environment=&quot;PATH=/bin:/sbin:/usr/bin:/usr/sbin&quot;
+ExecStart=/usr/bin/dockerd 
+ExecStartPost=/sbin/iptables -I FORWARD -s 0.0.0.0/0 -j ACCEPT
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Delegate=yes
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 启动docker服务并检查
+systemctl enable docker
+systemctl daemon-reload
+systemctl resatrt docker
+docker info
+</code></pre><p>安装当前node节点核心服务</p>
+<pre><code class="language-code" data-lang="code">wget https://dl.k8s.io/v1.17.0/kubernetes-node-linux-amd64.tar.gz
+tar -xzvf kubernetes-node-linux-amd64.tar.gz
+cp kubernetes/node/bin/{kubelet,kube-proxy} /usr/local/bin/
+</code></pre><p>创建kubelet的systemd unit的配置 /usr/lib/systemd/system/kubelet.service</p>
+<pre><code class="language-code" data-lang="code"># 预先创建工作目录 /var/lib/kubelet
+mkdir -p /var/lib/kubelet
+# ExecStartPre 在 centos7上 需要预先创建这些目录 否则权限cgroups可能会失败
+# pod-infra-container-image 这个参数必须配置 是pod的基础镜像 没有他的话没法创建pod
+# hostname-override 配置节点IP用于覆盖主机名
+# network-plugin=cni 使用cni的方式来使用网络插件
+# authentication-token-webhook=true 增加webhook给prometheus来进行访问
+# authorization-mode=Webhook 认证模式选择为webhook
+cat &gt; /usr/lib/systemd/system/kubelet.service &lt;&lt;EOF
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+WorkingDirectory=/var/lib/kubelet
+ExecStartPre=/bin/mount -o remount,rw '/sys/fs/cgroup'
+ExecStartPre=/bin/mkdir -p /sys/fs/cgroup/cpuset/system.slice/kubelet.service
+ExecStartPre=/bin/mkdir -p /sys/fs/cgroup/hugetlb/system.slice/kubelet.service
+ExecStartPre=/bin/mkdir -p /sys/fs/cgroup/memory/system.slice/kubelet.service
+ExecStartPre=/bin/mkdir -p /sys/fs/cgroup/pids/system.slice/kubelet.service
+ExecStart=/usr/local/bin/kubelet \
+  --config=/var/lib/kubelet/config.yaml \
+  --cni-bin-dir=/usr/local/bin \
+  --cni-conf-dir=/etc/cni/net.d \
+  --hostname-override=192.168.0.1 \
+  --kubeconfig=/etc/kubernetes/kubelet.kubeconfig \
+  --network-plugin=cni \
+  --pod-infra-container-image=mirrorgooglecontainers/pause-amd64:3.1 \
+  --root-dir=/var/lib/kubelet \
+  --authentication-token-webhook=true \
+  --authorization-mode=Webhook \
+  --v=2
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+</code></pre><p>创建kubelet配置文件/var/lib/kubelet/config.yaml</p>
+<pre><code class="language-code" data-lang="code">cat &gt; /var/lib/kubelet/config.yaml &lt;&lt;EOF
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+address: 192.168.0.1
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    cacheTTL: 2m0s
+    enabled: true
+  x509:
+    clientCAFile: /etc/kubernetes/ssl/ca.pem
+authorization:
+  mode: Webhook
+  webhook:
+    cacheAuthorizedTTL: 5m0s
+    cacheUnauthorizedTTL: 30s
+cgroupDriver: cgroupfs
+cgroupsPerQOS: true
+clusterDNS:
+- 10.254.0.2
+clusterDomain: cluster.local.
+configMapAndSecretChangeDetectionStrategy: Watch
+containerLogMaxFiles: 3 
+containerLogMaxSize: 10Mi
+enforceNodeAllocatable:
+- pods
+- kube-reserved
+eventBurst: 10
+eventRecordQPS: 5
+evictionHard:
+  imagefs.available: 15%
+  memory.available: 200Mi
+  nodefs.available: 10%
+  nodefs.inodesFree: 5%
+evictionPressureTransitionPeriod: 5m0s
+failSwapOn: true
+fileCheckFrequency: 40s
+hairpinMode: hairpin-veth 
+healthzBindAddress: 192.168.0.1
+healthzPort: 10248
+httpCheckFrequency: 40s
+imageGCHighThresholdPercent: 85
+imageGCLowThresholdPercent: 80
+imageMinimumGCAge: 2m0s
+kubeReservedCgroup: /system.slice/kubelet.service
+kubeReserved: {'cpu':'200m','memory':'500Mi','ephemeral-storage':'1Gi'}
+kubeAPIBurst: 100
+kubeAPIQPS: 50
+makeIPTablesUtilChains: true
+maxOpenFiles: 1000000
+maxPods: 110
+nodeLeaseDurationSeconds: 40
+nodeStatusReportFrequency: 1m0s
+nodeStatusUpdateFrequency: 10s
+oomScoreAdj: -999
+podPidsLimit: -1
+port: 10250
+# for now 'heapster' needs kubelet's 'readOnlyPort', in the future 'readOnlyPort: 0' will be set
+readOnlyPort: 10255
+resolvConf: /etc/resolv.conf
+runtimeRequestTimeout: 2m0s
+serializeImagePulls: true
+streamingConnectionIdleTimeout: 4h0m0s
+syncFrequency: 1m0s
+tlsCertFile: /etc/kubernetes/ssl/kubelet.pem
+tlsPrivateKeyFile: /etc/kubernetes/ssl/kubelet-key.pem
+EOF
+</code></pre><p>创建kube-proxy的systemd unit配置文件 /usr/lib/systemd/system/kube-proxy.service</p>
+<pre><code class="language-code" data-lang="code"># 创建工作目录 
+mkdir -p  /var/lib/kube-proxy
+cat &gt; /usr/lib/systemd/system/kube-proxy.service &lt;&lt;EOF
+[Unit]
+Description=Kubernetes Kube-Proxy Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+
+[Service]
+# kube-proxy 根据 --cluster-cidr 判断集群内部和外部流量，指定 --cluster-cidr 或 --masquerade-all 选项后，kube-proxy 会对访问 Service IP 的请求做 SNAT
+WorkingDirectory=/var/lib/kube-proxy
+ExecStart=/usr/loca/bin/kube-proxy \
+  --bind-address=192.168.0.1 \
+  --cluster-cidr=172.20.0.0/16 \
+  --hostname-override=192.168.0.1 \
+  --kubeconfig=/etc/kubernetes/kube-proxy.kubeconfig \
+  --logtostderr=true \
+  --proxy-mode=ipvs
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+# 启动服务
+systemctl daemon-reload
+systemctl enable kubelet
+systemctl enable kube-proxy
+systemctl start kubelet
+systemctl start kube-proxy
+</code></pre><p>检查节点是否正常</p>
+<pre><code class="language-code" data-lang="code">kubectl get node
+NAME          STATUS   ROLES    AGE   VERSION
+192.168.0.1   Ready    &lt;none&gt;   23m   v1.17.0
+</code></pre><h2 id="部署flannel网络插件">部署flannel网络插件</h2>
+<p>我们使用DaemonSet的模式来部署，部署flannel.yaml文件内容如下</p>
+<pre><code class="language-code" data-lang="code">---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: psp.flannel.unprivileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+spec:
+  privileged: false
+  volumes:
+    - configMap
+    - secret
+    - emptyDir
+    - hostPath
+  allowedHostPaths:
+    - pathPrefix: &quot;/etc/cni/net.d&quot;
+    - pathPrefix: &quot;/etc/kube-flannel&quot;
+    - pathPrefix: &quot;/run/flannel&quot;
+  readOnlyRootFilesystem: false
+  runAsUser:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  allowPrivilegeEscalation: false
+  defaultAllowPrivilegeEscalation: false
+  allowedCapabilities: ['NET_ADMIN']
+  defaultAddCapabilities: []
+  requiredDropCapabilities: []
+  hostPID: false
+  hostIPC: false
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  seLinux:
+    rule: 'RunAsAny'
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: flannel
+rules:
+  - apiGroups: ['policy']
+    resources: ['podsecuritypolicies']
+    verbs: ['use']
+    resourceNames: ['psp.flannel.unprivileged']
+  - apiGroups:
+      - &quot;&quot;
+    resources:
+      - pods
+    verbs:
+      - get
+  - apiGroups:
+      - &quot;&quot;
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - &quot;&quot;
+    resources:
+      - nodes/status
+    verbs:
+      - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: flannel
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flannel
+subjects:
+- kind: ServiceAccount
+  name: flannel
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flannel
+  namespace: kube-system
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+data:
+  cni-conf.json: |
+    {
+      &quot;name&quot;: &quot;cbr0&quot;,
+      &quot;cniVersion&quot;: &quot;0.3.1&quot;,
+      &quot;plugins&quot;: [
+        {
+          &quot;type&quot;: &quot;flannel&quot;,
+          &quot;delegate&quot;: {
+            &quot;hairpinMode&quot;: true,
+            &quot;isDefaultGateway&quot;: true
+          }
+        },
+        {
+          &quot;type&quot;: &quot;portmap&quot;,
+          &quot;capabilities&quot;: {
+            &quot;portMappings&quot;: true
+          }
+        }
+      ]
+    }
+  net-conf.json: |
+    {
+      &quot;Network&quot;: &quot;172.20.0.0/16&quot;,
+      &quot;Backend&quot;: {
+        &quot;Type&quot;: &quot;vxlan&quot;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds-amd64
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+spec:
+  selector:
+    matchLabels:
+      app: flannel
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: flannel
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: beta.kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+                  - key: beta.kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+      hostNetwork: true
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      serviceAccountName: flannel
+      initContainers:
+      - name: install-cni
+        image: quay.io/coreos/flannel:v0.11.0-amd64 
+        command:
+        - cp
+        args:
+        - -f
+        - /etc/kube-flannel/cni-conf.json
+        - /etc/cni/net.d/10-flannel.conflist
+        volumeMounts:
+        - name: cni
+          mountPath: /etc/cni/net.d
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      containers:
+      - name: kube-flannel
+        image: quay.io/coreos/flannel:v0.11.0-amd64 
+        command:
+        - /opt/bin/flanneld
+        args:
+        - --ip-masq
+        - --kube-subnet-mgr
+        resources:
+          requests:
+            cpu: &quot;100m&quot;
+            memory: &quot;50Mi&quot;
+          limits:
+            cpu: &quot;100m&quot;
+            memory: &quot;50Mi&quot;
+        securityContext:
+          privileged: false
+          capabilities:
+             add: [&quot;NET_ADMIN&quot;]
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: run
+          mountPath: /run/flannel
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      volumes:
+        - name: run
+          hostPath:
+            path: /run/flannel
+        - name: cni
+          hostPath:
+            path: /etc/cni/net.d
+        - name: flannel-cfg
+          configMap:
+            name: kube-flannel-cfg
+</code></pre><p>在master节点上执行命令并检查是否完成</p>
+<pre><code class="language-code" data-lang="code"># 脚本部署
+kubectl apply -f flannel.yml 
+# 检查pod是否成功创建
+kubectl get pod --all-namespaces
+NAMESPACE     NAME                          READY   STATUS    RESTARTS   AGE
+kube-system   kube-flannel-ds-amd64-657lr   1/1     Running   0          21m
+kube-system   kube-flannel-ds-amd64-76vbs   1/1     Running   0          21m
+kube-system   kube-flannel-ds-amd64-fbfvk   1/1     Running   0          21m
+# 创建测试pod
+kubectl run test --image=busybox --replicas=3 sleep 600
+kubectl get pod --all-namespaces -o wide|head -4
+NAMESPACE     NAME                          READY   STATUS    RESTARTS   AGE     IP            NODE          NOMINATED NODE   READINESS GATES
+default       test1-84d8ffdf7c-2prtm        1/1     Running   0          7m45s   172.20.1.2    192.168.0.2   &lt;none&gt;           &lt;none&gt;
+default       test1-84d8ffdf7c-h9qhr        1/1     Running   0          7m45s   172.20.2.2    192.168.0.2   &lt;none&gt;           &lt;none&gt;
+default       test1-84d8ffdf7c-jprfg        1/1     Running   0          7m45s   172.20.0.2    192.168.0.1   &lt;none&gt;           &lt;none&gt;
+# ip route 查看路由表并且ping一下都通就是成功了
+</code></pre><p>完成了node节点的部署一个具备基本功能的kubernetes集群就已经完成了搭建</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>feifeigood </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://feifeigood.github.io/2020/deploy-k8s-node/>https://feifeigood.github.io/2020/deploy-k8s-node/</span>
+            </p>
+            
+             
+            <p class="copyright-item lincese">
+                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-tag"></i>Tag(s): 
+            
+            <span class="tag"><a href="https://feifeigood.github.io/tags/k8s/">
+                    #k8s</a></span>
+            
+            <span class="tag"><a href="https://feifeigood.github.io/tags/%E9%83%A8%E7%BD%B2k8s/">
+                    #部署k8s</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://feifeigood.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://feifeigood.github.io/2020/deploy-k8s-master/" class="prev" rel="prev" title="手动搭建kubernetes集群系列-(3)部署master节点"><i class="iconfont icon-left"></i>&nbsp;手动搭建kubernetes集群系列-(3)部署master节点</a>
+         
+        
+        <a href="https://feifeigood.github.io/2020/coredns-forwarding-loops/" class="next" rel="next" title="kubernetes内解析回环导致coredns频繁OOMKilled">kubernetes内解析回环导致coredns频繁OOMKilled&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+
+    var gitalk = new Gitalk({
+        clientID: '28f695948e6230377ba4',
+        clientSecret: '263f20a97af4c1ca1ac9fe6f11b390e08bdb76d7',
+        repo: 'blog-commits',
+        owner: 'feifeigood',
+        admin: [''],
+        id: location.pathname,      
+        distractionFreeMode: false  
+    });
+
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://feifeigood.github.io">feifeigood</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

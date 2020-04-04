@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="feifeigood">
+  
+  
+  
+  <link rel="prev" href="https://feifeigood.github.io/2020/deploy-k8s-etcd/" />
+  <link rel="next" href="https://feifeigood.github.io/2020/deploy-k8s-node/" />
+  <link rel="canonical" href="https://feifeigood.github.io/2020/deploy-k8s-master/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           手动搭建kubernetes集群系列-(3)部署master节点 | feifeigood&#39;s Blog
+       
+  </title>
+  <meta name="title" content="手动搭建kubernetes集群系列-(3)部署master节点 | feifeigood&#39;s Blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/feifeigood.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "手动搭建kubernetes集群系列-(3)部署master节点",
+    "headline" : "手动搭建kubernetes集群系列-(3)部署master节点",
+    "description" : "k8s集群master节点由kube-apiserver、kube-controller-manager、kube-scheduler组成，",
+    "inLanguage" : "zh-cn",
+    "author" : "feifeigood",
+    "creator" : "feifeigood",
+    "publisher": "feifeigood",
+    "accountablePerson" : "feifeigood",
+    "copyrightHolder" : "feifeigood",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-02-09 10:54:14 \x2b0800 \x2b0800",
+    "dateModified" : "2020-02-09 10:54:14 \x2b0800 \x2b0800",
+    "url" : "https:\/\/feifeigood.github.io\/2020\/deploy-k8s-master\/",
+    "wordCount" : "1514",
+    "keywords" : [ "k8s","部署k8s", "feifeigood\x27s Blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://feifeigood.github.io">feifeigood&#39;s Blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://feifeigood.github.io">feifeigood&#39;s Blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/tags/" title="">Tags</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">手动搭建kubernetes集群系列-(3)部署master节点</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://feifeigood.github.io" rel="author">feifeigood</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-02-09 itemprop="datePublished">February 9, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://feifeigood.github.io/categories/kubernetes%E5%AE%9E%E8%B7%B5/"> kubernetes实践 </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>k8s集群master节点由kube-apiserver、kube-controller-manager、kube-scheduler组成，三个服务共同实现k8s集群的管控功能</p>
+<h2 id="使用cfssl创建证书">使用cfssl创建证书</h2>
+<pre><code class="language-code" data-lang="code"># 创建kubernetes请求证书配置文件kubernetes-csr.json 
+# hosts列表为授权IP和域名 
+# 10.254.0.1是kubernetes的services地址后续我们会使用10.254.0.0/16来作为集群服务的IP地址范围
+{
+    &quot;CN&quot;: &quot;kubernetes&quot;,
+    &quot;hosts&quot;: [
+        &quot;k8s.test.io&quot;,
+        &quot;kubernetes&quot;,
+        &quot;kubernetes.default&quot;,
+        &quot;kubernetes.default.svc&quot;,
+        &quot;kubernetes.default.svc.cluster&quot;,
+        &quot;kubernetes.default.svc.cluster.local&quot;,
+        &quot;127.0.0.1&quot;,
+        &quot;192.168.1.1&quot;,
+        &quot;10.254.0.1&quot;,
+        &quot;10.1.1.1&quot;
+    ],
+    &quot;key&quot;: {
+        &quot;algo&quot;: &quot;rsa&quot;,
+        &quot;size&quot;: 2048
+    },
+    &quot;names&quot;: [
+        {
+            &quot;C&quot;: &quot;CN&quot;,
+            &quot;ST&quot;: &quot;JiangSu&quot;,
+            &quot;L&quot;: &quot;NanTong&quot;,
+            &quot;O&quot;: &quot;k8s&quot;,
+            &quot;OU&quot;: &quot;System&quot;
+        }
+    ]
+}
+# 生成证书
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes
+# 创建admin请求证书配置文件admin-csr.json
+# kube-apiserver的接口授权用的是RBAC的模式，证书的CN字段将作为用户名来使用，O字段作为用户所属的组
+{
+  &quot;CN&quot;: &quot;admin&quot;,
+  &quot;hosts&quot;: [],
+  &quot;key&quot;: {
+    &quot;algo&quot;: &quot;rsa&quot;,
+    &quot;size&quot;: 2048
+  },
+  &quot;names&quot;: [
+    {
+      &quot;C&quot;: &quot;CN&quot;,
+      &quot;ST&quot;: &quot;JiangSu&quot;,
+      &quot;L&quot;: &quot;NanTong&quot;,
+      &quot;O&quot;: &quot;system:masters&quot;,
+      &quot;OU&quot;: &quot;System&quot;
+    }
+  ]
+}
+# 生成证书
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin
+</code></pre><p>创建完证书后将生成的*.pem文件全部复制到<code>/etc/kubernetes/ssl</code>目录下，后续启动服务需要配置这些证书</p>
+<h2 id="创建kubeconfig配置文件">创建kubeconfig配置文件</h2>
+<p>使用kubectl来连接集群必须要配置好集群认证信息</p>
+<pre><code class="language-code" data-lang="code"># 设置集群参数 k8s-example-01 是集群的名称 https://192.168.0.1:6443 是集群master主机的地址api接口 根据具体集群动态来生成
+[root@192.168.0.1 ~]# kubectl config set-cluster k8s-example-01 --certificate-authority=/etc/kubernetes/ssl/ca.pem --embed-certs=true --server=https://192.168.0.1:6443
+Cluster &quot;k8s-example-01&quot; set.
+# 设置客户端认证参数
+[root@192.168.0.1 ~]# kubectl config set-credentials admin --client-certificate=/etc/kubernetes/ssl/admin.pem --embed-certs=true --client-key=/etc/kubernetes/ssl/admin-key.pem 
+User &quot;admin&quot; set.
+# 设置上下文参数 文格式用 context-集群名称-用户名 可读性好
+[root@192.168.0.1 ~]# kubectl config set-context context-k8s-example-01-admin --cluster=k8s-example-01 --user=admin
+Context &quot;context-k8s-example-01-admin&quot; created.
+# 设置默认上下文
+[root@192.168.0.1 ~]# kubectl config use-context context-k8s-example-01-admin
+Switched to context &quot;context-k8s-example-01-admin&quot;.
+# 上面命令执行完成会生成配置文件在~/.kube/config 这个配置文件具有对集群控制的最高权限，要妥善保管
+[root@192.168.0.1 ~]# ls ~/.kube/config 
+/root/.kube/config
+</code></pre><h2 id="安装master节点组件">安装master节点组件</h2>
+<p>选择当前最新稳定版本v1.17，<a href="https://kubernetes.io/docs/setup/release/notes/">官方下载地址</a>选择kubernetes-server-linux-amd64.tar.gz</p>
+<pre><code class="language-code" data-lang="code"># 下载并解压二进制文件到可执行文件路径
+wget -S https://dl.k8s.io/v1.17.0/kubernetes-server-linux-amd64.tar.gz
+tar -xzvf kubernetes-server-linux-amd64.tar.gz
+cd kubernetes
+cp -r server/bin/{kube-apiserver,kube-controller-manager,kube-scheduler,kubectl,kube-proxy,kubelet} /usr/bin/
+</code></pre><h4 id="配置启动kube-apiserver">配置启动kube-apiserver</h4>
+<p>创建环境变量配置文件</p>
+<pre><code class="language-code" data-lang="code"># 通用配置文件
+cat &gt; /etc/kubernetes/config &lt;&lt;EOF
+###
+# kubernetes system config
+#
+# The following values are used to configure various aspects of all
+# kubernetes services, including
+#
+#   kube-apiserver.service
+#   kube-controller-manager.service
+#   kube-scheduler.service
+#   kubelet.service
+#   kube-proxy.service
+# logging to stderr means we get it in the systemd journal
+KUBE_LOGTOSTDERR=&quot;--logtostderr=true&quot;
+
+# journal message level, 0 is debug
+KUBE_LOG_LEVEL=&quot;--v=0&quot;
+
+# Should this cluster be allowed to run privileged docker containers
+KUBE_ALLOW_PRIV=&quot;--allow-privileged=true&quot;
+
+# How the controller-manager, scheduler, and proxy find the apiserver
+KUBE_MASTER=&quot;--master=http://127.0.0.1:8080&quot;
+EOF
+
+# kube-apiserver配置文件
+cat &gt; /etc/kubernetes/apiserver &lt;&lt;EOF
+###
+## kubernetes system config
+##
+## The following values are used to configure the kube-apiserver
+##
+#
+## The address on the local server to listen to.
+KUBE_API_ADDRESS=&quot;--advertise-address=27.45.167.5 --bind-address=27.45.167.5 --insecure-bind-address=127.0.0.1&quot;
+#
+## The port on the local server to listen on.
+#KUBE_API_PORT=&quot;--port=8080&quot;
+#
+## Comma separated list of nodes in the etcd cluster
+KUBE_ETCD_SERVERS=&quot;--etcd-servers=https://27.45.167.5:2379,https://27.45.167.7:2379,https://27.45.167.8:2379&quot;
+#
+## Address range to use for services
+KUBE_SERVICE_ADDRESSES=&quot;--service-cluster-ip-range=10.254.0.0/16&quot;
+#
+## default admission control policies
+KUBE_ENABLE_ADMISSION_PLUGINS=&quot;--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota&quot;
+#
+## Add your own!
+KUBE_API_ARGS=&quot;--authorization-mode=Node,RBAC \
+--kubelet-https=true \
+--kubelet-client-certificate=/etc/kubernetes/ssl/admin.pem \
+--kubelet-client-key=/etc/kubernetes/ssl/admin-key.pem \
+--anonymous-auth=false \
+--service-node-port-range=20000-40000 \
+--tls-cert-file=/etc/kubernetes/ssl/kubernetes.pem \
+--tls-private-key-file=/etc/kubernetes/ssl/kubernetes-key.pem \
+--client-ca-file=/etc/kubernetes/ssl/ca.pem \
+--service-account-key-file=/etc/kubernetes/ssl/ca-key.pem \
+--runtime-config=batch/v2alpha1=true \
+--etcd-cafile=/etc/kubernetes/ssl/ca.pem \
+--etcd-certfile=/etc/kubernetes/ssl/kubernetes.pem \
+--etcd-keyfile=/etc/kubernetes/ssl/kubernetes-key.pem \
+--enable-swagger-ui=true \
+--audit-log-maxage=30 \
+--audit-log-maxbackup=3 \
+--audit-log-maxsize=100 \
+--audit-log-path=/var/lib/audit.log \
+--event-ttl=1h&quot;
+EOF
+</code></pre><p>创建systemd启动配置文件</p>
+<pre><code class="language-code" data-lang="code">cat &gt; /usr/lib/systemd/system/kube-apiserver.service &lt;&lt;EOF
+[Unit]
+Description=Kubernetes API Service
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+After=etcd.service
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config
+EnvironmentFile=-/etc/kubernetes/apiserver
+ExecStart=/usr/local/bin/kube-apiserver \
+        $KUBE_LOGTOSTDERR \
+        $KUBE_LOG_LEVEL \
+        $KUBE_ETCD_SERVERS \
+        $KUBE_API_ADDRESS \
+        $KUBE_API_PORT \
+        $KUBELET_PORT \
+        $KUBE_ALLOW_PRIV \
+        $KUBE_SERVICE_ADDRESSES \
+        $KUBE_ENABLE_ADMISSION_PLUGINS \
+        $KUBE_API_ARGS
+Restart=on-failure
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+</code></pre><p>启动服务</p>
+<pre><code class="language-code" data-lang="code">systemctl daemon-reload
+systemctl enable kube-apiserver
+systemctl start kube-apiserver
+systemctl status kube-apiserver
+</code></pre><h4 id="配置启动kube-controller-manager">配置启动kube-controller-manager</h4>
+<p>创建环境变量配置文件</p>
+<pre><code class="language-code" data-lang="code">###
+# The following values are used to configure the kubernetes controller-manager
+
+# defaults from config and apiserver should be adequate
+
+# Add your own!
+KUBE_CONTROLLER_MANAGER_ARGS=&quot;--address=127.0.0.1 \
+--service-cluster-ip-range=10.254.0.0/16 \
+--cluster-name=k8s-example-01 \
+--cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem \
+--cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem \
+--service-account-private-key-file=/etc/kubernetes/ssl/ca-key.pem \
+--root-ca-file=/etc/kubernetes/ssl/ca.pem \
+--leader-elect=true&quot;
+</code></pre><p>创建systemd启动配置文件</p>
+<pre><code class="language-code" data-lang="code">cat &gt; /usr/lib/systemd/system/kube-controller-manager.service &lt;&lt;EOF
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config
+EnvironmentFile=-/etc/kubernetes/controller-manager
+ExecStart=/usr/local/bin/kube-controller-manager \
+        $KUBE_LOGTOSTDERR \
+        $KUBE_LOG_LEVEL \
+        $KUBE_MASTER \
+        $KUBE_CONTROLLER_MANAGER_ARGS
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+</code></pre><p>启动服务</p>
+<pre><code class="language-code" data-lang="code">systemctl daemon-reload
+systemctl enable kube-controller-manager
+systemctl start kube-controller-manager
+systemctl status kube-controller-manager
+</code></pre><h4 id="配置启动kube-scheduler">配置启动kube-scheduler</h4>
+<p>创建环境变量配置文件</p>
+<pre><code class="language-code" data-lang="code">cat &gt; /etc/kubernetes/scheduler &lt;&lt;EOF
+###
+# kubernetes scheduler config
+
+# default config should be adequate
+
+# Add your own!
+KUBE_SCHEDULER_ARGS=&quot;--leader-elect=true --bind-address=127.0.0.1&quot;
+EOF
+</code></pre><p>创建systemd启动配置文件</p>
+<pre><code class="language-code" data-lang="code">cat &gt; /usr/lib/systemd/system/kube-scheduler.service &lt;&lt;EOF
+[Unit]
+Description=Kubernetes Scheduler Plugin
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config
+EnvironmentFile=-/etc/kubernetes/scheduler
+ExecStart=/usr/local/bin/kube-scheduler \
+            $KUBE_LOGTOSTDERR \
+            $KUBE_LOG_LEVEL \
+            $KUBE_MASTER \
+            $KUBE_SCHEDULER_ARGS
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+</code></pre><p>启动服务</p>
+<pre><code class="language-code" data-lang="code">systemctl daemon-reload
+systemctl enable kube-scheduler
+systemctl start kube-scheduler
+systemctl status kube-scheduler
+</code></pre><h4 id="检查组件是否已经全部连接到apiserver">检查组件是否已经全部连接到apiserver</h4>
+<p>利用kubectl调用kube-apiserver来检查服务是否都启动成功</p>
+<pre><code class="language-code" data-lang="code">kubectl  get componentstatuses
+NAME                 STATUS    MESSAGE             ERROR
+scheduler            Healthy   ok                  
+controller-manager   Healthy   ok                  
+etcd-2               Healthy   {&quot;health&quot;:&quot;true&quot;}   
+etcd-1               Healthy   {&quot;health&quot;:&quot;true&quot;}   
+etcd-0               Healthy   {&quot;health&quot;:&quot;true&quot;}  
+</code></pre><p>看到上述全部成功的输出之后，表明master节点已经启动成功，接着我们需要去安装集群的最后一个角色node</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>feifeigood </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://feifeigood.github.io/2020/deploy-k8s-master/>https://feifeigood.github.io/2020/deploy-k8s-master/</span>
+            </p>
+            
+             
+            <p class="copyright-item lincese">
+                本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-tag"></i>Tag(s): 
+            
+            <span class="tag"><a href="https://feifeigood.github.io/tags/k8s/">
+                    #k8s</a></span>
+            
+            <span class="tag"><a href="https://feifeigood.github.io/tags/%E9%83%A8%E7%BD%B2k8s/">
+                    #部署k8s</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://feifeigood.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://feifeigood.github.io/2020/deploy-k8s-etcd/" class="prev" rel="prev" title="手动搭建kubernetes集群系列-(2)部署高可用etcd集群"><i class="iconfont icon-left"></i>&nbsp;手动搭建kubernetes集群系列-(2)部署高可用etcd集群</a>
+         
+        
+        <a href="https://feifeigood.github.io/2020/deploy-k8s-node/" class="next" rel="next" title="手动搭建kubernetes集群系列-(4)部署node节点">手动搭建kubernetes集群系列-(4)部署node节点&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+
+    var gitalk = new Gitalk({
+        clientID: '28f695948e6230377ba4',
+        clientSecret: '263f20a97af4c1ca1ac9fe6f11b390e08bdb76d7',
+        repo: 'blog-commits',
+        owner: 'feifeigood',
+        admin: [''],
+        id: location.pathname,      
+        distractionFreeMode: false  
+    });
+
+    (function () {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+            return;
+        }
+        gitalk.render('gitalk-container');
+    })();
+
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2019 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://feifeigood.github.io">feifeigood</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

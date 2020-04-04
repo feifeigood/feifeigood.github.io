@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>coredns on feifeigood&#39;s Blog</title>
+    <link>https://feifeigood.github.io/tags/coredns/</link>
+    <description>Recent content in coredns on feifeigood&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Thu, 27 Feb 2020 10:54:14 +0800</lastBuildDate>
+    
+	<atom:link href="https://feifeigood.github.io/tags/coredns/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>kubernetes内解析回环导致coredns频繁OOMKilled</title>
+      <link>https://feifeigood.github.io/2020/coredns-forwarding-loops/</link>
+      <pubDate>Thu, 27 Feb 2020 10:54:14 +0800</pubDate>
+      
+      <guid>https://feifeigood.github.io/2020/coredns-forwarding-loops/</guid>
+      <description>在调整上线业务集群的时候发现发现容器内的coredns总是会OOMKilled不论内存限制开放多大都会直接占满如下图 查看监控曲线可以看出co</description>
+    </item>
+    
+  </channel>
+</rss>
